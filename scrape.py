@@ -13,28 +13,28 @@ def scrape():
     soup = bs(response.text, 'html.parser')
 
     # latest news title and paragraph text
-    news_title = soup.find('div', class_='content_title').text
-    p_text = soup.find('div', class_='image_and_description_container').text
+    newsTitle = soup.find('div', class_='content_title').text
+    pText = soup.find('div', class_='image_and_description_container').text
 
 
     ## JPL Scrape
     # splinter: find the image url for the current Featured Mars Image - `featured_image_url`.
-    executable_path = {'executable_path': ChromeDriverManager().install()}
-    browser = Browser('chrome', **executable_path, headless=False)
+    executable_path = {'executable_path': "~/usr/local/bin/chromedriver.exec"}
+    browser = Browser('chrome', executable_path, headless=False)
 
     # open the url and parse
-    url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space'
-    browser.visit(url + '/index.html')
+    url2 = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space'
+    browser.visit(url2 + '/index.html')
     html = browser.html
     soup = bs(html, 'html.parser')
 
     # Scrape the featured image location
     header = soup.find_all('div', class_='header')
     for item in header: 
-        featured_img = item.find('img',class_='headerimage fade-in')['src']
+        featuredImg = item.find('img',class_='headerimage fade-in')['src']
         
     # Get the full image url 
-    featured_img_url = url + '/' + featured_img
+    featuredImgUrl = url + '/' + featuredImg
 
     # Quit browser 
     browser.quit()
@@ -42,8 +42,8 @@ def scrape():
 
     ## Mars Facts Scrape
     # Scrape the facts table
-    url = 'https://space-facts.com/mars/'
-    tables = pd.read_html(url)
+    url3 = 'https://space-facts.com/mars/'
+    tables = pd.read_html(url3)
 
     # Convert to dataframe 
     facts_df = pd.DataFrame(tables[0])
@@ -54,40 +54,40 @@ def scrape():
 
     ## Mars Hemispheres Scrape
     # Open url and parse
-    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
-    response = requests.get(url)
+    url4 = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    response = requests.get(url4)
     soup = bs(response.text, 'html.parser')
 
     # Navigate to item section 
     links = soup.find_all('a', class_='itemLink product-item')
 
     # Create empty list of links 
-    link_list = []
+    linkList = []
 
     # Loop through link section and get image info links 
     for link in links:
-        img_link = link['href']
+        imgLink = link['href']
         
         # Add image info to list 
-        link_list.append(img_link)
+        linkList.append(imgLink)
 
     # Generate full links to image info pages 
     base_url = 'https://astrogeology.usgs.gov'
 
     # Empty list for full links 
-    full_links = []
+    fullLinks = []
 
     # Loop through link list and generate full link
-    for link in link_list:
-        full_link = base_url + link
-        full_links.append(full_link)
+    for link in linkList:
+        fullLink = base_url + link
+        fullLinks.append(fullLink)
 
     # Empty lists for full-size image links and titles
-    img_links = []
+    imgLinks = []
     titles = []
 
     # Loop through each link and scrape title and links to the full size image
-    for link in full_links:
+    for link in fullLinks:
         response = requests.get(link)
         soup = bs(response.text, 'html.parser')
         
@@ -96,31 +96,31 @@ def scrape():
         titles.append(title)
         
         # Navigate to image link location
-        img_link = soup.find('img', class_='wide-image')
-        img_link = img_link['src']
-        img_links.append(img_link)
+        imgLink = soup.find('img', class_='wide-image')
+        imgLink = imgLink['src']
+        imgLinks.append(imgLink)
 
         # Create list of dictionaries for each image
         keys = ['title', 'img_url']
-        zip_list= list(zip(titles, img_links))
-        hemispheres = [{k:v for k,v in zip(keys, z)} for z in zip_list]
+        zipList= list(zip(titles, imgLinks))
+        hemispheres = [{k:v for k,v in zip(keys, z)} for z in zipList]
 
     # Generate full url link
-    full_img_links = []
-    for link in img_links:
-        full_link = base_url + link
-        full_img_links.append(full_link)
+    fullImgLinks = []
+    for link in imgLinks:
+        fullLink = base_url + link
+        fullImgLinks.append(fullLink)
 
     # Create list of dictionaries for each image
     keys = ['title', 'img_url']
-    zip_list= list(zip(titles, full_img_links))
-    hemispheres = [{k:v for k,v in zip(keys, z)} for z in zip_list]
+    zipList= list(zip(titles, fullImgLinks))
+    hemispheres = [{k:v for k,v in zip(keys, z)} for z in zipList]
 
     # Compile into a dictionary
     mars_dict = {
-        'news_title': news_title,
-        'news_text': p_text,
-        'featured_img': featured_img_url,
+        'news_title': newsTitle,
+        'news_text': pText,
+        'featured_img': featuredImgUrl,
         'mars_facts': facts_html,
         'hemisphere_imgs': hemispheres
     }
